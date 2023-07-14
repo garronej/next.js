@@ -108,7 +108,7 @@ pub(super) async fn get_app_route_entry(
     );
 
     let inner_assets = indexmap! {
-        "ENTRY".to_string() => entry.into()
+        "ENTRY".to_string() => entry
     };
 
     let rsc_entry = rsc_context.process(

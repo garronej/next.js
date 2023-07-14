@@ -164,8 +164,7 @@ impl LoaderTreeBuilder {
                     .process(source, reference_ty),
             };
 
-            self.inner_assets
-                .insert(format!("COMPONENT_{i}"), module.into());
+            self.inner_assets.insert(format!("COMPONENT_{i}"), module);
         }
         Ok(())
     }
@@ -253,8 +252,7 @@ impl LoaderTreeBuilder {
                         FileSourceVc::new(*path).into(),
                         BlurPlaceholderMode::None,
                         self.context,
-                    )
-                    .into(),
+                    ),
                 );
                 writeln!(self.loader_tree_code, "{s}(async (props) => [{{")?;
                 writeln!(self.loader_tree_code, "{s}  url: {identifier}.src,")?;
@@ -275,13 +273,11 @@ impl LoaderTreeBuilder {
                         .push(format!("import {identifier} from \"{inner_module_id}\";"));
                     self.inner_assets.insert(
                         inner_module_id,
-                        self.context
-                            .process(
-                                TextContentFileSourceVc::new(FileSourceVc::new(*alt_path).into())
-                                    .into(),
-                                Value::new(ReferenceType::Internal(InnerAssetsVc::empty())),
-                            )
-                            .into(),
+                        self.context.process(
+                            TextContentFileSourceVc::new(FileSourceVc::new(*alt_path).into())
+                                .into(),
+                            Value::new(ReferenceType::Internal(InnerAssetsVc::empty())),
+                        ),
                     );
                     writeln!(self.loader_tree_code, "{s}  alt: {identifier},")?;
                 }

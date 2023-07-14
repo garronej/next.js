@@ -88,7 +88,7 @@ pub async fn create_page_loader_entry_module(
             "PAGE".to_string() => client_context.process(
                 entry_asset,
                 Value::new(ReferenceType::Entry(EntryReferenceSubType::Page))
-            ).into(),
+            ),
         }))),
     ))
 }

@@ -64,7 +64,7 @@ impl Transition for NextEdgeRouteTransition {
         context: ModuleAssetContextVc,
     ) -> Result<ModuleVc> {
         let new_asset = route_bootstrap(
-            asset.into(),
+            asset,
             context.into(),
             self.base_path,
             self.bootstrap_asset,

@@ -123,7 +123,7 @@ pub async fn bootstrap(
 
     let mut inner_assets = inner_assets.await?.clone_value();
     inner_assets.insert("ENTRY".to_string(), asset);
-    inner_assets.insert("BOOTSTRAP_CONFIG".to_string(), config_asset.into());
+    inner_assets.insert("BOOTSTRAP_CONFIG".to_string(), config_asset);
 
     let asset = context.process(
         bootstrap_asset,

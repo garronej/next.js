@@ -75,7 +75,7 @@ impl Transition for NextClientTransition {
             context.process(
                 internal_asset,
                 Value::new(ReferenceType::Internal(InnerAssetsVc::cell(indexmap! {
-                    "PAGE".to_string() => asset.into()
+                    "PAGE".to_string() => asset
                 }))),
             )
         } else {

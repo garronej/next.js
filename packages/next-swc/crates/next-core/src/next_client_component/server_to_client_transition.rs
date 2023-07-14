@@ -51,8 +51,8 @@ impl Transition for NextServerToClientTransition {
                 context.process(
                     internal_source,
                     Value::new(ReferenceType::Internal(InnerAssetsVc::cell(indexmap! {
-                        "CLIENT_MODULE".to_string() => client_module.into(),
-                        "CLIENT_CHUNKS".to_string() => client_chunks.into(),
+                        "CLIENT_MODULE".to_string() => client_module,
+                        "CLIENT_CHUNKS".to_string() => client_chunks,
                     }))),
                 )
             }
@@ -61,7 +61,7 @@ impl Transition for NextServerToClientTransition {
                 context.process(
                     internal_source,
                     Value::new(ReferenceType::Internal(InnerAssetsVc::cell(indexmap! {
-                        "CLIENT_CHUNKS".to_string() => client_chunks.into(),
+                        "CLIENT_CHUNKS".to_string() => client_chunks,
                     }))),
                 )
             }

@@ -807,7 +807,7 @@ impl SsrEntryVc {
             SsrType::Api => (
                 next_asset("entry/server-api.tsx"),
                 indexmap! {
-                    "INNER".to_string() => entry_asset_page.into(),
+                    "INNER".to_string() => entry_asset_page,
                 },
             ),
             SsrType::EdgeApi => {
@@ -819,14 +819,14 @@ impl SsrEntryVc {
                 (
                     next_asset("entry/server-edge-api.tsx"),
                     indexmap! {
-                        "INNER_EDGE_CHUNK_GROUP".to_string() => entry_asset_edge_chunk_group.into(),
+                        "INNER_EDGE_CHUNK_GROUP".to_string() => entry_asset_edge_chunk_group,
                     },
                 )
             }
             SsrType::Data => (
                 next_asset("entry/server-data.tsx"),
                 indexmap! {
-                    "INNER".to_string() => entry_asset_page.into(),
+                    "INNER".to_string() => entry_asset_page,
                 },
             ),
             SsrType::Html => {
@@ -838,8 +838,8 @@ impl SsrEntryVc {
                 (
                     next_asset("entry/server-renderer.tsx"),
                     indexmap! {
-                        "INNER".to_string() => entry_asset_page.into(),
-                        "INNER_CLIENT_CHUNK_GROUP".to_string() => entry_asset_client_chunk_group.into(),
+                        "INNER".to_string() => entry_asset_page,
+                        "INNER_CLIENT_CHUNK_GROUP".to_string() => entry_asset_client_chunk_group,
                     },
                 )
             }

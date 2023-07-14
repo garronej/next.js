@@ -458,7 +458,7 @@ async fn get_mock_stylesheet(
 
     let root = mock_fs.root();
     let val = evaluate(
-        mocked_response_asset.into(),
+        mocked_response_asset,
         root,
         env,
         AssetIdentVc::from_path(loader_path),

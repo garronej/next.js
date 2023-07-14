@@ -737,7 +737,7 @@ async fn load_next_config_and_custom_routes_internal(
         Value::new(ReferenceType::Entry(EntryReferenceSubType::Undefined)),
     );
     let config_value = evaluate(
-        load_next_config_asset.into(),
+        load_next_config_asset,
         project_path,
         env,
         config_asset.map_or_else(|| AssetIdentVc::from_path(project_path), |c| c.ident()),

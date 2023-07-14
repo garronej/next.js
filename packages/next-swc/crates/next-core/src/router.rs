@@ -212,8 +212,8 @@ async fn config_assets(
     );
 
     Ok(InnerAssetsVc::cell(indexmap! {
-        "MIDDLEWARE_CHUNK_GROUP".to_string() => manifest.into(),
-        "MIDDLEWARE_CONFIG".to_string() => config_asset.into(),
+        "MIDDLEWARE_CHUNK_GROUP".to_string() => manifest,
+        "MIDDLEWARE_CONFIG".to_string() => config_asset,
     }))
 }
 
@@ -363,7 +363,7 @@ async fn route_internal(
     let invalidation = CompletionsVc::all(vec![next_config_changed, routes_changed]);
     let debug = should_debug("router");
     let result = evaluate(
-        router_asset.into(),
+        router_asset,
         project_path,
         env,
         AssetIdentVc::from_path(project_path),

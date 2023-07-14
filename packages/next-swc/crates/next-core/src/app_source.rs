@@ -909,13 +909,13 @@ impl AppRendererVc {
                     "APP_ENTRY".to_string() => context.with_transition(rsc_transition).process(
                         asset.into(),
                         Value::new(ReferenceType::Internal(InnerAssetsVc::cell(loader_tree_module.inner_assets))),
-                    ).into(),
+                    ),
                     "APP_BOOTSTRAP".to_string() => context.with_transition("next-client").process(
                         FileSourceVc::new(next_js_file_path("entry/app/hydrate.tsx")).into(),
                         Value::new(ReferenceType::EcmaScriptModules(
                             EcmaScriptModulesReferenceSubType::Undefined,
                         )),
-                    ).into(),
+                    ),
                 }))),
             ),
             Some(NextRuntime::Edge) =>
@@ -925,7 +925,7 @@ impl AppRendererVc {
                         "INNER_EDGE_CHUNK_GROUP".to_string() => context.with_transition("next-edge-page").process(
                             asset.into(),
                             Value::new(ReferenceType::Internal(InnerAssetsVc::cell(loader_tree_module.inner_assets))),
-                        ).into(),
+                        ),
                     }))),
                 )
         };
@@ -1010,7 +1010,7 @@ impl AppRouteVc {
                 let bootstrap_asset = next_asset("entry/app/route.ts");
 
                 route_bootstrap(
-                    entry_asset.into(),
+                    entry_asset,
                     this.context.into(),
                     this.project_path,
                     bootstrap_asset,
@@ -1028,7 +1028,7 @@ impl AppRouteVc {
                 let module = this.context.process(
                     internal_asset,
                     Value::new(ReferenceType::Internal(InnerAssetsVc::cell(indexmap! {
-                        "ROUTE_CHUNK_GROUP".to_string() => entry.into()
+                        "ROUTE_CHUNK_GROUP".to_string() => entry
                     }))),
                 );
 
