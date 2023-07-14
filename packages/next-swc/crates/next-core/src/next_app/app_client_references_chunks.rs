@@ -1,30 +1,44 @@
-use std::collections::HashSet;
-
 use anyhow::Result;
 use indexmap::IndexMap;
-use next_core::{self, next_client_reference::ClientReferenceType};
-use turbo_tasks::TryJoinIterExt;
+use serde::{Deserialize, Serialize};
+use turbo_tasks::{debug::ValueDebugFormat, trace::TraceRawVcs, TryJoinIterExt};
 use turbopack_binding::turbopack::{
     build::BuildChunkingContextVc,
     core::{
         chunk::{ChunkableModule, ChunkingContext},
-        output::{OutputAssetVc, OutputAssetsVc},
+        output::OutputAssetsVc,
     },
     ecmascript::chunk::EcmascriptChunkingContextVc,
 };
 
-/// Computes all client references chunks, and adds them to the relevant
-/// manifests.
+use crate::next_client_reference::{ClientReferenceType, ClientReferenceTypesVc};
+
+/// Contains the chunks corresponding to a client reference.
+#[derive(
+    Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, TraceRawVcs, ValueDebugFormat,
+)]
+pub struct ClientReferenceChunks {
+    /// Chunks to be loaded on the client.
+    pub client_chunks: OutputAssetsVc,
+    /// Chunks to be loaded on the server for SSR.
+    pub ssr_chunks: OutputAssetsVc,
+}
+
+#[turbo_tasks::value(transparent)]
+pub struct ClientReferencesChunks(IndexMap<ClientReferenceType, ClientReferenceChunks>);
+
+/// Computes all client references chunks.
 ///
 /// This returns a map from client reference type to the chunks that reference
 /// type needs to load.
-pub async fn compute_app_client_references_chunks(
-    app_client_reference_types: &HashSet<ClientReferenceType>,
+#[turbo_tasks::function]
+pub async fn get_app_client_references_chunks(
+    app_client_reference_types: ClientReferenceTypesVc,
     client_chunking_context: EcmascriptChunkingContextVc,
     ssr_chunking_context: BuildChunkingContextVc,
-    all_chunks: &mut Vec<OutputAssetVc>,
-) -> Result<IndexMap<ClientReferenceType, ClientReferenceChunks>> {
+) -> Result<ClientReferencesChunksVc> {
     let app_client_references_chunks: IndexMap<_, _> = app_client_reference_types
+        .await?
         .iter()
         .map(|client_reference_ty| async move {
             Ok((
@@ -61,28 +75,5 @@ pub async fn compute_app_client_references_chunks(
         .into_iter()
         .collect();
 
-    for (app_client_reference_ty, app_client_reference_chunks) in &app_client_references_chunks {
-        match app_client_reference_ty {
-            ClientReferenceType::EcmascriptClientReference(_) => {
-                let client_chunks = &app_client_reference_chunks.client_chunks.await?;
-                let ssr_chunks = &app_client_reference_chunks.ssr_chunks.await?;
-                all_chunks.extend(client_chunks.iter().copied());
-                all_chunks.extend(ssr_chunks.iter().copied());
-            }
-            ClientReferenceType::CssClientReference(_) => {
-                let client_chunks = &app_client_reference_chunks.client_chunks.await?;
-                all_chunks.extend(client_chunks.iter().copied());
-            }
-        }
-    }
-
-    Ok(app_client_references_chunks)
-}
-
-/// Contains the chunks corresponding to a client reference.
-pub struct ClientReferenceChunks {
-    /// Chunks to be loaded on the client.
-    pub client_chunks: OutputAssetsVc,
-    /// Chunks to be loaded on the server for SSR.
-    pub ssr_chunks: OutputAssetsVc,
+    Ok(ClientReferencesChunksVc::cell(app_client_references_chunks))
 }

@@ -3,7 +3,6 @@ use std::io::Write;
 use anyhow::{bail, Result};
 use base64::{display::Base64Display, engine::general_purpose::STANDARD};
 use indoc::writedoc;
-use next_core::app_structure::MetadataItem;
 use turbo_tasks::ValueToString;
 use turbopack_binding::{
     turbo::tasks_fs::{rope::RopeBuilder, File, FileContent, FileSystemPathVc},
@@ -13,10 +12,12 @@ use turbopack_binding::{
     },
 };
 
-use super::{app_entries::AppEntryVc, app_route_entry::get_app_route_entry};
+use super::app_route_entry::get_app_route_entry;
+use crate::{app_structure::MetadataItem, next_app::AppEntryVc};
 
 /// Computes the entry for a Next.js favicon file.
-pub(super) async fn get_app_route_favicon_entry(
+#[turbo_tasks::function]
+pub async fn get_app_route_favicon_entry(
     rsc_context: ModuleAssetContextVc,
     favicon: MetadataItem,
     project_root: FileSystemPathVc,
@@ -76,12 +77,11 @@ pub(super) async fn get_app_route_favicon_entry(
         // TODO(alexkirsz) Figure out how to name this virtual source.
         VirtualSourceVc::new(project_root.join("todo.tsx"), file.into());
 
-    get_app_route_entry(
+    Ok(get_app_route_entry(
         rsc_context,
         source.into(),
         // TODO(alexkirsz) Get this from the metadata?
-        "/favicon.ico",
+        "/favicon.ico".to_string(),
         project_root,
-    )
-    .await
+    ))
 }

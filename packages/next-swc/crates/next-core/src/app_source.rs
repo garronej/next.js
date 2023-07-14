@@ -66,6 +66,7 @@ use crate::{
     fallback::get_fallback_page,
     loader_tree::{LoaderTreeModule, ServerComponentTransition},
     mode::NextMode,
+    next_app::UnsupportedDynamicMetadataIssue,
     next_client::{
         context::{
             get_client_assets_path, get_client_module_options_context,
@@ -90,7 +91,6 @@ use crate::{
         get_server_resolve_options_context, ServerContextType,
     },
     util::{render_data, NextRuntime},
-    UnsupportedDynamicMetadataIssue,
 };
 
 fn pathname_to_segments(pathname: &str) -> Result<(Vec<BaseSegment>, RouteType)> {

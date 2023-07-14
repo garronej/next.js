@@ -1,7 +1,7 @@
 use std::future::Future;
 
 use anyhow::Result;
-use indexmap::IndexMap;
+use indexmap::IndexSet;
 use serde::{Deserialize, Serialize};
 use turbo_tasks::{
     debug::ValueDebugFormat,
@@ -47,12 +47,20 @@ pub enum ClientReferenceType {
 }
 
 #[turbo_tasks::value(transparent)]
-pub struct ClientReferencesByEntry(IndexMap<AssetVc, Vec<ClientReference>>);
+pub struct ClientReferences(Vec<ClientReference>);
+
+#[turbo_tasks::value(transparent)]
+pub struct ClientReferenceTypes(IndexSet<ClientReferenceType>);
+
+#[turbo_tasks::value(transparent)]
+pub struct ClientReferenceGraph {
+    graph: AdjacencyMap<VisitClientReferenceNode>,
+}
 
 #[turbo_tasks::value_impl]
-impl ClientReferencesByEntryVc {
+impl ClientReferenceGraphVc {
     #[turbo_tasks::function]
-    pub async fn new(entries: AssetsVc) -> Result<ClientReferencesByEntryVc> {
+    pub async fn new(entries: AssetsVc) -> Result<Self> {
         let entries = entries.await?;
 
         let graph = AdjacencyMap::new()
@@ -72,42 +80,69 @@ impl ClientReferencesByEntryVc {
             .completed()?
             .into_inner();
 
-        let client_references = entries
-            .iter()
-            .copied()
-            .map(|entry| {
-                let mut entry_client_references = vec![];
-                for node in graph.reverse_topological_from_node(&VisitClientReferenceNode {
-                    server_component: None,
-                    ty: VisitClientReferenceNodeType::Internal(entry),
-                }) {
-                    match &node.ty {
-                        VisitClientReferenceNodeType::Internal(_asset) => {
-                            // No-op. These nodes are only useful during graph
-                            // traversal.
-                        }
-                        VisitClientReferenceNodeType::ClientReference(client_reference) => {
-                            entry_client_references.push(*client_reference);
-                        }
-                    }
-                }
-                (entry, entry_client_references)
-            })
-            .collect();
+        Ok(ClientReferenceGraph { graph }.cell())
+    }
 
-        Ok(ClientReferencesByEntryVc::cell(client_references))
+    #[turbo_tasks::function]
+    pub async fn types(self) -> Result<ClientReferenceTypesVc> {
+        let this = self.await?;
+        let mut client_reference_types = IndexSet::new();
+
+        for node in this.graph.reverse_topological() {
+            match &node.ty {
+                VisitClientReferenceNodeType::Internal(_asset) => {
+                    // No-op. These nodes are only useful during graph
+                    // traversal.
+                }
+                VisitClientReferenceNodeType::ClientReference(client_reference) => {
+                    client_reference_types.insert(*client_reference.ty());
+                }
+            }
+        }
+
+        Ok(ClientReferenceTypesVc::cell(client_reference_types))
+    }
+
+    #[turbo_tasks::function]
+    pub async fn entry(self, entry: AssetVc) -> Result<ClientReferencesVc> {
+        let this = self.await?;
+        let mut entry_client_references = vec![];
+
+        for node in this
+            .graph
+            .reverse_topological_from_node(&VisitClientReferenceNode {
+                server_component: None,
+                ty: VisitClientReferenceNodeType::Internal(entry),
+            })
+        {
+            match &node.ty {
+                VisitClientReferenceNodeType::Internal(_asset) => {
+                    // No-op. These nodes are only useful during graph
+                    // traversal.
+                }
+                VisitClientReferenceNodeType::ClientReference(client_reference) => {
+                    entry_client_references.push(*client_reference);
+                }
+            }
+        }
+
+        Ok(ClientReferencesVc::cell(entry_client_references))
     }
 }
 
 struct VisitClientReference;
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(
+    Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, ValueDebugFormat, TraceRawVcs,
+)]
 struct VisitClientReferenceNode {
     server_component: Option<NextServerComponentModuleVc>,
     ty: VisitClientReferenceNodeType,
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(
+    Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, ValueDebugFormat, TraceRawVcs,
+)]
 enum VisitClientReferenceNodeType {
     ClientReference(ClientReference),
     Internal(AssetVc),

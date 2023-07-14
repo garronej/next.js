@@ -8,6 +8,7 @@ use next_core::{
     },
     next_config::NextConfigVc,
     next_dynamic::NextDynamicTransitionVc,
+    next_manifests::{BuildManifest, PagesManifest},
     next_server::{
         get_server_module_options_context, get_server_resolve_options_context,
         get_server_runtime_entries, ServerContextType,
@@ -47,8 +48,6 @@ use turbopack_binding::{
         },
     },
 };
-
-use crate::manifests::{BuildManifest, PagesManifest};
 
 #[turbo_tasks::value]
 pub struct PageEntries {

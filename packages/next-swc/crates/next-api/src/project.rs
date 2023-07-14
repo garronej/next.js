@@ -3,7 +3,7 @@ use std::path::MAIN_SEPARATOR;
 use anyhow::{Context, Result};
 use indexmap::{map::Entry, IndexMap};
 use next_core::{
-    app_structure::{find_app_dir, get_entrypoints},
+    app_structure::find_app_dir,
     mode::NextMode,
     next_client::{
         get_client_chunking_context, get_client_compile_time_info,
@@ -22,8 +22,7 @@ use next_core::{
 };
 use serde::{Deserialize, Serialize};
 use turbo_tasks::{
-    debug::ValueDebugFormat, trace::TraceRawVcs, NothingVc, TaskInput, TransientValue,
-    TryJoinIterExt, Value,
+    debug::ValueDebugFormat, trace::TraceRawVcs, NothingVc, TaskInput, TransientValue, Value,
 };
 use turbopack_binding::{
     turbo::{
@@ -56,7 +55,8 @@ use turbopack_binding::{
 };
 
 use crate::{
-    app::app_entry_point_to_route,
+    app::{AppProjectVc, OptionAppProjectVc},
+    entrypoints::{Entrypoints, EntrypointsVc},
     pages::get_pages_routes,
     route::{EndpointVc, Route},
 };
@@ -85,12 +85,6 @@ pub struct ProjectOptions {
 pub struct Middleware {
     pub endpoint: EndpointVc,
     pub config: NextSourceConfig,
-}
-
-#[turbo_tasks::value]
-pub struct Entrypoints {
-    pub routes: IndexMap<String, Route>,
-    pub middleware: Option<Middleware>,
 }
 
 #[turbo_tasks::value]
@@ -174,7 +168,7 @@ impl ProjectVc {
     }
 
     #[turbo_tasks::function]
-    async fn project_path(self) -> Result<FileSystemPathVc> {
+    pub(super) async fn project_path(self) -> Result<FileSystemPathVc> {
         let this = self.await?;
         let root = self.project_root_path();
         let project_relative = this.project_path.strip_prefix(&this.root_path).unwrap();
@@ -198,17 +192,29 @@ impl ProjectVc {
     }
 
     #[turbo_tasks::function]
-    fn env(self) -> ProcessEnvVc {
+    async fn app_project(self) -> Result<OptionAppProjectVc> {
+        let this = self.await?;
+        let app_dir = find_app_dir(self.project_path()).await?;
+
+        Ok(OptionAppProjectVc::cell(if let Some(app_dir) = &*app_dir {
+            Some(AppProjectVc::new(self, *app_dir, this.mode))
+        } else {
+            None
+        }))
+    }
+
+    #[turbo_tasks::function]
+    pub(super) fn env(self) -> ProcessEnvVc {
         load_env(self.project_path())
     }
 
     #[turbo_tasks::function]
-    async fn next_config(self) -> Result<NextConfigVc> {
+    pub(super) async fn next_config(self) -> Result<NextConfigVc> {
         Ok(self.await?.next_config)
     }
 
     #[turbo_tasks::function]
-    fn execution_context(self) -> ExecutionContextVc {
+    pub(super) fn execution_context(self) -> ExecutionContextVc {
         let node_root = self.node_root();
 
         let node_execution_chunking_context = DevChunkingContextVc::builder(
@@ -229,7 +235,7 @@ impl ProjectVc {
     }
 
     #[turbo_tasks::function]
-    async fn client_compile_time_info(self) -> Result<CompileTimeInfoVc> {
+    pub(super) async fn client_compile_time_info(self) -> Result<CompileTimeInfoVc> {
         let this = self.await?;
         Ok(get_client_compile_time_info(
             this.mode,
@@ -238,7 +244,7 @@ impl ProjectVc {
     }
 
     #[turbo_tasks::function]
-    async fn server_compile_time_info(self) -> Result<CompileTimeInfoVc> {
+    pub(super) async fn server_compile_time_info(self) -> Result<CompileTimeInfoVc> {
         let this = self.await?;
         Ok(get_server_compile_time_info(
             this.mode,
@@ -465,19 +471,15 @@ impl ProjectVc {
         let this = self.await?;
         let mut routes = IndexMap::new();
         if let Some(app_dir) = *find_app_dir(self.project_path()).await? {
-            let app_entrypoints = get_entrypoints(app_dir, this.next_config.page_extensions());
+            let app_project = AppProjectVc::new(self, app_dir, this.mode);
+            let app_entrypoints = app_project.entrypoints();
             routes.extend(
+                // TODO middleware
                 app_entrypoints
                     .await?
+                    .routes
                     .iter()
-                    .map(|(pathname, app_entrypoint)| async {
-                        Ok((
-                            pathname.clone(),
-                            *app_entry_point_to_route(*app_entrypoint).await?,
-                        ))
-                    })
-                    .try_join()
-                    .await?,
+                    .map(|(k, v)| (k.clone(), *v)),
             );
         }
         for (pathname, page_route) in get_pages_routes(self, self.pages_structure()).await?.iter() {

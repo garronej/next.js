@@ -2,6 +2,7 @@
 #![feature(min_specialization)]
 
 mod app;
+mod entrypoints;
 mod pages;
 pub mod project;
 pub mod route;
