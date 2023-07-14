@@ -6,7 +6,6 @@ use turbopack_binding::{
     turbo::tasks_fs::{glob::GlobVc, FileSystem, FileSystemPathVc},
     turbopack::{
         core::{
-            asset::Asset,
             resolve::{
                 options::{
                     ConditionValue, ImportMap, ImportMapVc, ImportMapping, ImportMappingVc,
@@ -16,6 +15,7 @@ use turbopack_binding::{
                 pattern::Pattern,
                 resolve, AliasPattern, ResolveAliasMapVc, SubpathValue,
             },
+            source::{asset_to_source, Source},
         },
         node::execution_context::ExecutionContextVc,
         turbopack::{resolve_options, resolve_options_context::ResolveOptionsContext},
@@ -625,7 +625,8 @@ pub async fn get_next_package(project_path: FileSystemPathVc) -> Result<FileSyst
         package_lookup_resolve_options(project_path),
     );
     let assets = result.primary_assets().await?;
-    let asset = assets.first().context("Next.js package not found")?;
+    let asset = *assets.first().context("Next.js package not found")?;
+    let asset = asset_to_source(asset);
     Ok(asset.ident().path().parent())
 }
 

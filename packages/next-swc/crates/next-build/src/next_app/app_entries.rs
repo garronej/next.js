@@ -29,16 +29,15 @@ use turbopack_binding::{
     turbopack::{
         build::BuildChunkingContextVc,
         core::{
-            asset::{Asset, AssetVc},
+            asset::AssetVc,
             chunk::{
                 availability_info::AvailabilityInfo, ChunkingContext, EvaluatableAssetsVc,
                 ModuleId as TurbopackModuleId,
             },
             compile_time_info::CompileTimeInfoVc,
             file_source::FileSourceVc,
-            output::{OutputAssetVc, OutputAssetsVc},
-            raw_output::RawOutputVc,
-            virtual_source::VirtualSourceVc,
+            output::{OutputAsset, OutputAssetVc, OutputAssetsVc},
+            virtual_output::VirtualOutputAssetVc,
         },
         ecmascript::{
             chunk::{
@@ -506,7 +505,7 @@ pub async fn compute_app_entries_chunks(
         }
 
         let client_reference_manifest_json = serde_json::to_string(&entry_manifest).unwrap();
-        let client_reference_manifest_source = VirtualSourceVc::new(
+        let client_reference_manifest_output_asset = VirtualOutputAssetVc::new(
             node_root.join(&format!(
                 "server/app/{original_name}_client-reference-manifest.js",
                 original_name = app_entry.original_name
@@ -521,7 +520,7 @@ pub async fn compute_app_entries_chunks(
             })
             .into(),
         );
-        all_chunks.push(RawOutputVc::new(client_reference_manifest_source.into()).into());
+        all_chunks.push(client_reference_manifest_output_asset.into());
     }
 
     Ok(())

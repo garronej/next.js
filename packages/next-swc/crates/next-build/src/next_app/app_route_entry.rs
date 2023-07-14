@@ -9,10 +9,9 @@ use turbopack_binding::{
     turbo::tasks_fs::{rope::RopeBuilder, File, FileSystemPathVc},
     turbopack::{
         core::{
-            asset::Asset,
             context::AssetContext,
             reference_type::{EcmaScriptModulesReferenceSubType, InnerAssetsVc, ReferenceType},
-            source::SourceVc,
+            source::{Source, SourceVc},
             virtual_source::VirtualSourceVc,
         },
         ecmascript::{chunk::EcmascriptChunkPlaceableVc, utils::StringifyJs},

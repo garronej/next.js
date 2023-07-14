@@ -11,15 +11,15 @@ use turbo_tasks::{primitives::StringVc, trace::TraceRawVcs, TryJoinIterExt};
 use turbo_tasks_fs::FileSystemPathVc;
 use turbopack_binding::turbopack::{
     core::{
-        asset::{Asset, AssetVc},
         context::{AssetContext, AssetContextVc},
         file_source::FileSourceVc,
         ident::AssetIdentVc,
         issue::{
             Issue, IssueSeverity, IssueSeverityVc, IssueSourceVc, IssueVc, OptionIssueSourceVc,
         },
-        module::ModuleVc,
+        module::{Module, ModuleVc},
         reference_type::{EcmaScriptModulesReferenceSubType, ReferenceType},
+        source::SourceVc,
     },
     ecmascript::{
         analyzer::{graph::EvalContext, ConstantNumber, ConstantValue, JsValue},
@@ -213,6 +213,7 @@ impl Issue for NextSegmentConfigParsingIssue {
 #[turbo_tasks::function]
 pub async fn parse_segment_config_from_source(
     module_asset: ModuleVc,
+    source: SourceVc,
 ) -> Result<NextSegmentConfigVc> {
     let Some(ecmascript_asset) = EcmascriptModuleAssetVc::resolve_from(module_asset).await? else {
         return Ok(NextSegmentConfigVc::default());
@@ -244,7 +245,7 @@ pub async fn parse_segment_config_from_source(
             };
 
             if let Some(init) = decl.init.as_ref() {
-                parse_config_value(module_asset, &mut config, ident, init, eval_context);
+                parse_config_value(module_asset, source, &mut config, ident, init, eval_context);
             }
         }
     }
@@ -252,12 +253,13 @@ pub async fn parse_segment_config_from_source(
     Ok(config.cell())
 }
 
-fn issue_source(source: AssetVc, span: Span) -> IssueSourceVc {
+fn issue_source(source: SourceVc, span: Span) -> IssueSourceVc {
     IssueSourceVc::from_byte_offset(source, span.lo.to_usize(), span.hi.to_usize())
 }
 
 fn parse_config_value(
     module: ModuleVc,
+    source: SourceVc,
     config: &mut NextSegmentConfig,
     ident: &Ident,
     init: &Expr,
@@ -269,7 +271,7 @@ fn parse_config_value(
         NextSegmentConfigParsingIssue {
             ident: module.ident(),
             detail: StringVc::cell(format!("{detail} Got {explainer}.{hints}")),
-            source: issue_source(module.into(), span),
+            source: issue_source(source, span),
         }
         .cell()
         .as_issue()
@@ -390,13 +392,17 @@ pub async fn parse_segment_config_from_loader_tree(
         .into_iter()
         .flatten()
     {
+        let source = FileSourceVc::new(component).into();
         config.apply_parent_config(
-            &*parse_segment_config_from_source(context.process(
-                FileSourceVc::new(component).into(),
-                turbo_tasks::Value::new(ReferenceType::EcmaScriptModules(
-                    EcmaScriptModulesReferenceSubType::Undefined,
-                )),
-            ))
+            &*parse_segment_config_from_source(
+                context.process(
+                    source,
+                    turbo_tasks::Value::new(ReferenceType::EcmaScriptModules(
+                        EcmaScriptModulesReferenceSubType::Undefined,
+                    )),
+                ),
+                source,
+            )
             .await?,
         );
     }

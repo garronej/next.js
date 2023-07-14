@@ -31,11 +31,11 @@ use turbopack_binding::{
         build::BuildChunkingContextVc,
         cli_utils::issue::{ConsoleUiVc, LogOptions},
         core::{
-            asset::{Asset, AssetVc, AssetsVc},
+            asset::{Asset, AssetsVc},
             chunk::ChunkingContext,
             environment::ServerAddrVc,
             issue::{IssueReporter, IssueReporterVc, IssueSeverity, IssueVc},
-            output::{OutputAssetVc, OutputAssetsVc},
+            output::{OutputAsset, OutputAssetVc, OutputAssetsVc},
             reference::AssetReference,
             virtual_fs::VirtualFileSystemVc,
         },
@@ -534,12 +534,12 @@ async fn emit_all_assets(
 }
 
 #[turbo_tasks::function]
-fn emit(asset: AssetVc) -> CompletionVc {
+fn emit(asset: OutputAssetVc) -> CompletionVc {
     asset.content().write(asset.ident().path())
 }
 
 #[turbo_tasks::function]
-fn emit_rebase(asset: AssetVc, from: FileSystemPathVc, to: FileSystemPathVc) -> CompletionVc {
+fn emit_rebase(asset: OutputAssetVc, from: FileSystemPathVc, to: FileSystemPathVc) -> CompletionVc {
     asset
         .content()
         .write(rebase(asset.ident().path(), from, to))
@@ -548,8 +548,8 @@ fn emit_rebase(asset: AssetVc, from: FileSystemPathVc, to: FileSystemPathVc) -> 
 /// Walks the asset graph from multiple assets and collect all referenced
 /// assets.
 #[turbo_tasks::function]
-async fn all_assets_from_entries(entries: OutputAssetsVc) -> Result<AssetsVc> {
-    Ok(AssetsVc::cell(
+async fn all_assets_from_entries(entries: OutputAssetsVc) -> Result<OutputAssetsVc> {
+    Ok(OutputAssetsVc::cell(
         AdjacencyMap::new()
             .skip_duplicates()
             .visit(
@@ -565,7 +565,9 @@ async fn all_assets_from_entries(entries: OutputAssetsVc) -> Result<AssetsVc> {
 }
 
 /// Computes the list of all chunk children of a given chunk.
-async fn get_referenced_assets(asset: AssetVc) -> Result<impl Iterator<Item = AssetVc> + Send> {
+async fn get_referenced_assets(
+    asset: OutputAssetVc,
+) -> Result<impl Iterator<Item = OutputAssetVc> + Send> {
     Ok(asset
         .references()
         .await?
@@ -574,6 +576,11 @@ async fn get_referenced_assets(asset: AssetVc) -> Result<impl Iterator<Item = As
             let primary_assets = reference.resolve_reference().primary_assets().await?;
             Ok(primary_assets.clone_value())
         })
+        .try_join()
+        .await?
+        .into_iter()
+        .flatten()
+        .map(|asset| async move { Ok(OutputAssetVc::resolve_from(asset).await?) })
         .try_join()
         .await?
         .into_iter()

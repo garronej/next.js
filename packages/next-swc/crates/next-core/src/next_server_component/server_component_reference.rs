@@ -1,23 +1,23 @@
 use anyhow::Result;
 use turbo_tasks::{primitives::StringVc, ValueToString, ValueToStringVc};
 use turbopack_binding::turbopack::core::{
-    asset::{Asset, AssetVc},
     chunk::{
         ChunkableModuleReference, ChunkableModuleReferenceVc, ChunkingType, ChunkingTypeOptionVc,
     },
+    module::{Module, ModuleVc},
     reference::{AssetReference, AssetReferenceVc},
     resolve::{ResolveResult, ResolveResultVc},
 };
 
 #[turbo_tasks::value]
 pub struct NextServerComponentModuleReference {
-    asset: AssetVc,
+    asset: ModuleVc,
 }
 
 #[turbo_tasks::value_impl]
 impl NextServerComponentModuleReferenceVc {
     #[turbo_tasks::function]
-    pub fn new(asset: AssetVc) -> Self {
+    pub fn new(asset: ModuleVc) -> Self {
         NextServerComponentModuleReference { asset }.cell()
     }
 }
@@ -37,7 +37,7 @@ impl ValueToString for NextServerComponentModuleReference {
 impl AssetReference for NextServerComponentModuleReference {
     #[turbo_tasks::function]
     fn resolve_reference(&self) -> ResolveResultVc {
-        ResolveResult::asset(self.asset).cell()
+        ResolveResult::asset(self.asset.into()).cell()
     }
 }
 

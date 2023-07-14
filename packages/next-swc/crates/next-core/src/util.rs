@@ -14,7 +14,7 @@ use turbopack_binding::{
             environment::{ServerAddrVc, ServerInfo},
             ident::AssetIdentVc,
             issue::{Issue, IssueSeverity, IssueSeverityVc, IssueVc, OptionIssueSourceVc},
-            module::ModuleVc,
+            module::{Module, ModuleVc},
             reference_type::{EcmaScriptModulesReferenceSubType, ReferenceType},
             resolve::{
                 self, handle_resolve_error, node::node_cjs_resolve_options, parse::RequestVc,

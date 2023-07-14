@@ -6,9 +6,9 @@ use turbo_tasks::{Value, ValueToString};
 use turbo_tasks_fs::FileSystemPathVc;
 use turbopack_binding::turbopack::{
     core::{
-        asset::AssetVc,
         context::AssetContext,
         file_source::FileSourceVc,
+        module::ModuleVc,
         reference_type::{EcmaScriptModulesReferenceSubType, InnerAssetsVc, ReferenceType},
     },
     ecmascript::{magic_identifier, text::TextContentFileSourceVc, utils::StringifyJs},
@@ -28,7 +28,7 @@ use crate::{
 };
 
 pub struct LoaderTreeBuilder {
-    inner_assets: IndexMap<String, AssetVc>,
+    inner_assets: IndexMap<String, ModuleVc>,
     counter: usize,
     imports: Vec<String>,
     loader_tree_code: String,
@@ -359,7 +359,7 @@ impl LoaderTreeBuilder {
 pub struct LoaderTreeModule {
     pub imports: Vec<String>,
     pub loader_tree_code: String,
-    pub inner_assets: IndexMap<String, AssetVc>,
+    pub inner_assets: IndexMap<String, ModuleVc>,
     pub unsupported_metadata: Vec<FileSystemPathVc>,
     pub pages: Vec<FileSystemPathVc>,
 }

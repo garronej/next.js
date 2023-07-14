@@ -13,12 +13,12 @@ use turbopack_binding::{
     },
     turbopack::{
         core::{
-            asset::AssetVc,
             chunk::{ChunkingContextVc, EvaluatableAssetVc, EvaluatableAssetsVc},
             compile_time_info::CompileTimeInfoVc,
             context::{AssetContext, AssetContextVc},
             environment::ServerAddrVc,
             file_source::FileSourceVc,
+            module::ModuleVc,
             reference_type::{EntryReferenceSubType, InnerAssetsVc, ReferenceType},
             source::{SourceVc, SourcesVc},
         },
@@ -301,7 +301,7 @@ pub async fn create_page_source(
             node_root,
             render_data,
         ),
-        AssetGraphContentSourceVc::new_eager(client_root, fallback_page.as_asset())
+        AssetGraphContentSourceVc::new_eager(client_root, fallback_page.into())
             .as_content_source()
             .issue_context(pages_dir, "Next.js pages directory fallback"),
         create_not_found_page_source(
@@ -802,7 +802,7 @@ impl SsrEntryVc {
         } else {
             this.ty
         };
-        let (internal_asset, inner_assets): (_, IndexMap<_, AssetVc>) = match ty {
+        let (internal_asset, inner_assets): (_, IndexMap<_, ModuleVc>) = match ty {
             SsrType::AutoApi => unreachable!(),
             SsrType::Api => (
                 next_asset("entry/server-api.tsx"),

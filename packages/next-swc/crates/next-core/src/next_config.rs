@@ -12,7 +12,6 @@ use turbopack_binding::{
     turbo::{tasks_env::EnvMapVc, tasks_fs::FileSystemPathVc},
     turbopack::{
         core::{
-            asset::Asset,
             changed::any_content_changed,
             chunk::ChunkingContext,
             context::AssetContext,
@@ -25,6 +24,7 @@ use turbopack_binding::{
                 options::{ImportMap, ImportMapping},
                 FindContextFileResult, ResolveAliasMap, ResolveAliasMapVc,
             },
+            source::Source,
         },
         ecmascript_plugin::transform::{
             emotion::EmotionTransformConfig, relay::RelayConfig,

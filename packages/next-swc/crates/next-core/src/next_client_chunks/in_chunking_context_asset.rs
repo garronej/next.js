@@ -30,12 +30,15 @@ pub struct InChunkingContextAsset {
 }
 
 #[turbo_tasks::value_impl]
-impl Asset for InChunkingContextAsset {
+impl Module for InChunkingContextAsset {
     #[turbo_tasks::function]
     fn ident(&self) -> AssetIdentVc {
         self.asset.ident().with_modifier(modifier())
     }
+}
 
+#[turbo_tasks::value_impl]
+impl Asset for InChunkingContextAsset {
     #[turbo_tasks::function]
     fn content(&self) -> AssetContentVc {
         self.asset.content()
@@ -46,9 +49,6 @@ impl Asset for InChunkingContextAsset {
         self.asset.references()
     }
 }
-
-#[turbo_tasks::value_impl]
-impl Module for InChunkingContextAsset {}
 
 #[turbo_tasks::value_impl]
 impl ChunkableModule for InChunkingContextAsset {

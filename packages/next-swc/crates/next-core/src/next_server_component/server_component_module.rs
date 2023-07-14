@@ -50,12 +50,15 @@ impl NextServerComponentModuleVc {
 }
 
 #[turbo_tasks::value_impl]
-impl Asset for NextServerComponentModule {
+impl Module for NextServerComponentModule {
     #[turbo_tasks::function]
     fn ident(&self) -> AssetIdentVc {
         self.module.ident().with_modifier(modifier())
     }
+}
 
+#[turbo_tasks::value_impl]
+impl Asset for NextServerComponentModule {
     #[turbo_tasks::function]
     fn content(&self) -> Result<AssetContentVc> {
         bail!("Next.js server component module has no content")
@@ -68,9 +71,6 @@ impl Asset for NextServerComponentModule {
         AssetReferencesVc::cell(references)
     }
 }
-
-#[turbo_tasks::value_impl]
-impl Module for NextServerComponentModule {}
 
 #[turbo_tasks::value_impl]
 impl ChunkableModule for NextServerComponentModule {

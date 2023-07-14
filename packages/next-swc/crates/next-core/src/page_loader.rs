@@ -15,7 +15,7 @@ use turbopack_binding::{
             context::{AssetContext, AssetContextVc},
             ident::AssetIdentVc,
             module::ModuleVc,
-            output::OutputAssetsVc,
+            output::{OutputAsset, OutputAssetVc, OutputAssetsVc},
             reference::{AssetReferencesVc, SingleAssetReferenceVc},
             reference_type::{EntryReferenceSubType, InnerAssetsVc, ReferenceType},
             source::SourceVc,
@@ -128,7 +128,7 @@ fn page_loader_chunk_reference_description() -> StringVc {
 }
 
 #[turbo_tasks::value_impl]
-impl Asset for PageLoaderAsset {
+impl OutputAsset for PageLoaderAsset {
     #[turbo_tasks::function]
     async fn ident(&self) -> Result<AssetIdentVc> {
         Ok(AssetIdentVc::from_path(self.server_root.join(&format!(
@@ -136,7 +136,10 @@ impl Asset for PageLoaderAsset {
             get_asset_path_from_pathname(&self.pathname.await?, ".js")
         ))))
     }
+}
 
+#[turbo_tasks::value_impl]
+impl Asset for PageLoaderAsset {
     #[turbo_tasks::function]
     async fn content(self_vc: PageLoaderAssetVc) -> Result<AssetContentVc> {
         let this = &*self_vc.await?;

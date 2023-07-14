@@ -12,12 +12,11 @@ use turbopack_binding::{
     turbo::tasks_fs::FileSystemPathVc,
     turbopack::{
         core::{
-            asset::Asset,
             changed::{any_content_changed, any_content_changed_of_output_assets},
             chunk::{ChunkableModule, ChunkingContext},
             context::AssetContext,
             file_source::FileSourceVc,
-            output::{OutputAssetVc, OutputAssetsVc},
+            output::{OutputAsset, OutputAssetVc, OutputAssetsVc},
             reference_type::{EntryReferenceSubType, ReferenceType},
             source::SourceVc,
         },

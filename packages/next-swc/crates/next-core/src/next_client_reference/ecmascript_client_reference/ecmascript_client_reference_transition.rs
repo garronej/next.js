@@ -2,10 +2,9 @@ use anyhow::{bail, Result};
 use turbo_tasks::Value;
 use turbopack_binding::turbopack::{
     core::{
-        asset::Asset,
         module::ModuleVc,
         reference_type::{EntryReferenceSubType, ReferenceType},
-        source::SourceVc,
+        source::{Source, SourceVc},
     },
     ecmascript::chunk::EcmascriptChunkPlaceableVc,
     turbopack::{

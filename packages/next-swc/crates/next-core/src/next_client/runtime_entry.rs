@@ -3,10 +3,10 @@ use turbopack_binding::{
     turbo::{tasks::ValueToString, tasks_fs::FileSystemPathVc},
     turbopack::{
         core::{
-            asset::Asset,
             chunk::{EvaluatableAssetVc, EvaluatableAssetsVc},
             context::AssetContextVc,
             issue::{IssueSeverity, OptionIssueSourceVc},
+            module::{convert_asset_to_module, Module},
             resolve::{origin::PlainResolveOriginVc, parse::RequestVc},
             source::SourceVc,
         },
@@ -45,10 +45,11 @@ impl RuntimeEntryVc {
         .await?;
 
         let mut runtime_entries = Vec::with_capacity(assets.len());
-        for asset in &assets {
+        for &asset in &assets {
             if let Some(entry) = EvaluatableAssetVc::resolve_from(asset).await? {
                 runtime_entries.push(entry);
             } else {
+                let asset = convert_asset_to_module(asset);
                 bail!(
                     "runtime reference resolved to an asset ({}) that cannot be evaluated",
                     asset.ident().to_string().await?

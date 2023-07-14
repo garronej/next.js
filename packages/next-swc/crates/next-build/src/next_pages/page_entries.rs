@@ -27,12 +27,11 @@ use turbopack_binding::{
     turbopack::{
         build::BuildChunkingContextVc,
         core::{
-            asset::Asset,
             chunk::{ChunkableModule, ChunkingContext, EvaluatableAssetsVc},
             compile_time_info::CompileTimeInfoVc,
             context::{AssetContext, AssetContextVc},
             file_source::FileSourceVc,
-            output::OutputAssetVc,
+            output::{OutputAsset, OutputAssetVc},
             reference_type::{EntryReferenceSubType, ReferenceType},
             source::SourceVc,
         },

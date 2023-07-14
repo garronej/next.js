@@ -6,7 +6,7 @@ use turbo_tasks::{
 use turbo_tasks_fs::{rebase, FileSystemPathVc};
 use turbopack_binding::turbopack::core::{
     asset::Asset,
-    output::{OutputAssetVc, OutputAssetsVc},
+    output::{OutputAsset, OutputAssetVc, OutputAssetsVc},
     reference::AssetReference,
 };
 

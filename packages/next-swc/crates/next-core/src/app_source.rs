@@ -1004,7 +1004,7 @@ impl AppRouteVc {
             Value::new(ReferenceType::Entry(EntryReferenceSubType::AppRoute)),
         );
 
-        let config = parse_segment_config_from_source(entry_asset);
+        let config = parse_segment_config_from_source(entry_asset, entry_file_source.into());
         let module = match config.await?.runtime {
             Some(NextRuntime::NodeJs) | None => {
                 let bootstrap_asset = next_asset("entry/app/route.ts");
